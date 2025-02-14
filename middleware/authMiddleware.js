@@ -35,7 +35,7 @@ const isAdmin = (req, res, next) => {
  try{
   if(!req.user){return res.status(401).json({msg: "Need to be authenticated "})};
 
-  if(req.user.role !== "admin"){return res.status(401).json({msg: "You dot not a admin"})};
+  if(req.user.role !== "admin" && req.user._id.toString() !== order.user.toString()){return res.status(401).json({msg: "You dot not a admin"})};
   next();
  } catch(error){
   console.log(error);

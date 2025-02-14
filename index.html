@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>CRUD con Autenticación (sin Angular)</title>
+</head>
+<body style="font-family: sans-serif; margin: 2rem;">
+  <h1>CRUD de Productos - Con Login</h1>
+
+  <!-- Sección de Login -->
+  <div style="border:1px solid #ccc; padding:1rem; margin-bottom:1rem;">
+    <h2>Login</h2>
+    <label>Email:</label>
+    <input type="text" id="email" placeholder="ejemplo@correo.com" />
+    <br/>
+    <label>Password:</label>
+    <input type="password" id="password" placeholder="******" />
+    <br/><br/>
+    <button id="loginBtn">Iniciar Sesión</button>
+    <p id="loginMsg" style="color:red;"></p>
+  </div>
+
+  <!-- Botones para CRUD de productos -->
+  <div style="margin-bottom:1rem;">
+    <button id="listarBtn">Listar Productos</button>
+    <button id="crearBtn">Crear Producto</button>
+    <button id="editarBtn">Editar Producto</button>
+    <button id="borrarBtn">Borrar Producto</button>
+  </div>
+
+  <!-- Muestra el resultado de cada petición -->
+  <pre id="resultado" style="background:#f0f0f0; padding:1rem;"></pre>
+
+  <script>
+    // Ajusta las URLs según tu backend:
+    const LOGIN_URL = 'http://localhost:5000/api/users/login'; // Ejemplo: /api/users/login
+    const PRODUCTS_URL = 'http://localhost:5000/api/products';
+
+    // Variables globales
+    let authToken = ''; // Guardaremos aquí el token tras el login
+
+    // Elementos del DOM
+    const emailEl = document.getElementById('email');
+    const passwordEl = document.getElementById('password');
+    const loginBtn = document.getElementById('loginBtn');
+    const loginMsg = document.getElementById('loginMsg');
+
+    const listarBtn = document.getElementById('listarBtn');
+    const crearBtn = document.getElementById('crearBtn');
+    const editarBtn = document.getElementById('editarBtn');
+    const borrarBtn = document.getElementById('borrarBtn');
+    const resultadoEl = document.getElementById('resultado');
+
+    // Mostrar JSON en pantalla
+    function mostrarResultado(data) {
+      resultadoEl.textContent = JSON.stringify(data, null, 2);
+    }
+
+    // 1. LOGIN
+    loginBtn.addEventListener('click', () => {
+      const email = emailEl.value;
+      const password = passwordEl.value;
+      loginMsg.textContent = '';
+
+      // Hacemos POST a /login
+      fetch(LOGIN_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      })
+      .then(res => {
+        if(!res.ok) throw new Error('Credenciales inválidas');
+        return res.json();
+      })
+      .then(data => {
+        // Suponiendo que el backend devuelve { token, user: {...} }
+        if (data.token) {
+          authToken = data.token;
+          loginMsg.style.color = 'green';
+          loginMsg.textContent = 'Login exitoso. Token obtenido.';
+        } else {
+          throw new Error('Token no encontrado en la respuesta');
+        }
+      })
+      .catch(err => {
+        loginMsg.style.color = 'red';
+        loginMsg.textContent = err.message;
+        console.error(err);
+      });
+    });
+
+    // 2. Listar Productos (GET)
+    listarBtn.addEventListener('click', () => {
+      fetch(PRODUCTS_URL, {
+        method: 'GET',
+        headers: {
+          'Authorization': 'Bearer ' + authToken
+        }
+      })
+      .then(res => res.json())
+      .then(data => mostrarResultado(data))
+      .catch(err => console.error(err));
+    });
+
+    // 3. Crear Producto (POST)
+    crearBtn.addEventListener('click', () => {
+      const nuevoProducto = {
+        name: 'Producto Demo',
+        description: 'Descripción demo con login',
+        price: 100,
+        image: 'https://via.placeholder.com/100',
+        category: 'Demo',
+        stock: 5
+      };
+      // Suponiendo tu backend usa /new-product
+      fetch(PRODUCTS_URL + '/new-product', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + authToken
+        },
+        body: JSON.stringify(nuevoProducto)
+      })
+      .then(res => res.json())
+      .then(data => mostrarResultado(data))
+      .catch(err => console.error(err));
+    });
+
+    // 4. Editar Producto (PUT)
+    editarBtn.addEventListener('click', () => {
+      const productoId = 'ID_DE_TU_PRODUCTO'; // Ajusta con un ID real
+      const cambios = { price: 999 };
+      fetch(PRODUCTS_URL + '/' + productoId, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + authToken
+        },
+        body: JSON.stringify(cambios)
+      })
+      .then(res => res.json())
+      .then(data => mostrarResultado(data))
+      .catch(err => console.error(err));
+    });
+
+    // 5. Borrar Producto (DELETE)
+    borrarBtn.addEventListener('click', () => {
+      const productoId = 'ID_DE_TU_PRODUCTO'; // Ajusta con un ID real
+      fetch(PRODUCTS_URL + '/' + productoId, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': 'Bearer ' + authToken
+        }
+      })
+      .then(res => res.json())
+      .then(data => mostrarResultado(data))
+      .catch(err => console.error(err));
+    });
+  </script>
+</body>
+</html>
