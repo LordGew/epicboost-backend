@@ -22,7 +22,9 @@ const userSchema = new Schema({
     avatar: { 
         type: String, 
         typeof: String, 
-        default: "img.png" },                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
+        default: "img.png" },   
+        resetPasswordToken: { type: String },
+        resetPasswordExpire: { type: Date },                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
 },
     { timestamps: true });
 

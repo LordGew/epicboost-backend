@@ -1,5 +1,6 @@
 require("dotenv").config();
 const connectDB = require("./config/db");
+
 connectDB();
 
 const express = require("express");
@@ -11,6 +12,7 @@ const app = express();
 // Middleware global
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }))
 
 // Rutas
 app.use("/api/users", require("./routes/userRoutes"));
